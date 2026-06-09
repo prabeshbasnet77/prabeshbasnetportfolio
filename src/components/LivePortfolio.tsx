@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Project, Skill, Service, Testimonial, Profile, SocialLinks } from '../types';
 // @ts-ignore
 import PrabeshCV from '../assets/images/Prabesh_Basnet_CV.pdf';
+image: "/images/fagfyugaf.png"
+image: "/images/ppp.webp"
 
 interface LivePortfolioProps {
   profile: Profile;
