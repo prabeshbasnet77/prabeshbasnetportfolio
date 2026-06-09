@@ -158,7 +158,7 @@ export const LivePortfolio: React.FC<LivePortfolioProps> = ({
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => scrollToSection('hero')}>
             <span className="w-8 h-8 rounded-lg bg-gradient-to-tr flex items-center justify-center font-geist font-bold text-black text-sm">
-              <img src="/public/fagfyugaf.png" alt="" />
+              <img src="/fagfyugaf.png" alt="" />
             </span>
             <span className="font-geist font-bold tracking-tight text-white hidden sm:inline-block">
               {profile.fullName}
@@ -292,7 +292,7 @@ export const LivePortfolio: React.FC<LivePortfolioProps> = ({
 
                   <div className="w-full h-full rounded-[22px] overflow-hidden relative bg-black/50">
                     <img
-                      src="/public/coatprofile1.png"
+                      src="/coatprofile1.png"
                       alt="Crafting Digital Experiences"
                       referrerPolicy="no-referrer"
                       className="w-full h-full object-cover group-hover:scale-105 transition-all duration-700 brightness-90 grayscale-[5%]"
