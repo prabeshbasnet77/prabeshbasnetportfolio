@@ -7,7 +7,7 @@ export const INITIAL_PROFILE: Profile = {
   emailAddress: "prabeshbasnet529@gmail.com",
   location: "Chitwan, Nepal",
   phone: "+977 9749849144",
-  avatarUrl: "/public/ppp.webp"
+  avatarUrl: "/ppp.webp"
 };
 
 export const INITIAL_SOCIALS: SocialLinks = {
