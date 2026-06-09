@@ -1,0 +1,6 @@
+{
+  "name": "Portfolio & Admin Console",
+  "description": "A high-fidelity customizable personal portfolio site coupled with a matching fully-connected real-time Administrative Control Center.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
