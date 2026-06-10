@@ -10,7 +10,7 @@ import { AdminTestimonials } from './components/AdminTestimonials';
 import { AdminContact } from './components/AdminContact';
 import { AdminSettings } from './components/AdminSettings';
 import { AdminLogin } from './components/AdminLogin';
-import { supabase } from '../supabaseClient.js';
+import { supabase } from './supabaseClient.js';
 
 import {
   INITIAL_PROFILE,
