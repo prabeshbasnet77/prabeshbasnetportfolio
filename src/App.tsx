@@ -253,6 +253,7 @@ export default function App() {
   const unreadMessagesCount = messages.filter(m => m.isNew).length;
 
   if (loading && false) {
+    
     return (
       <div className="min-h-screen bg-black flex items-center justify-center text-white/50 font-mono text-xs">
         Initializing Portfolio Core Engine Modules...
