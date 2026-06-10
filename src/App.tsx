@@ -10,11 +10,12 @@ import { AdminTestimonials } from './components/AdminTestimonials';
 import { AdminContact } from './components/AdminContact';
 import { AdminSettings } from './components/AdminSettings';
 import { AdminLogin } from './components/AdminLogin';
-import { supabase } from '../supabaseClient.js'; // Ensure this matches your exact filename
+import { supabase } from './supabaseClient.js';
 
 import {
   INITIAL_PROFILE,
   INITIAL_SOCIALS,
+  INITIAL_PROJECTS,
   INITIAL_SKILLS,
   INITIAL_SERVICES,
   INITIAL_TESTIMONIALS,
@@ -30,47 +31,49 @@ export default function App() {
   // Application unified states
   const [profile, setProfile] = useState<Profile>(INITIAL_PROFILE);
   const [socials, setSocials] = useState<SocialLinks>(INITIAL_SOCIALS);
-  
-  // Real-time Database state for projects
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-
   const [skills, setSkills] = useState<Skill[]>(INITIAL_SKILLS);
   const [services, setServices] = useState<Service[]>(INITIAL_SERVICES);
   const [testimonials, setTestimonials] = useState<Testimonial[]>(INITIAL_TESTIMONIALS);
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
 
-  // 1. Core Supabase Fetch Function
+  // Dynamic Database Real-time states for projects
+  const [projects, setProjects] = useState<Project[]>(INITIAL_PROJECTS);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  // 1. Fetch Projects from Supabase
   const fetchProjects = async () => {
-    const { data, error } = await supabase
-      .from('projects')
-      .select('*')
-      .order('id', { ascending: true });
-    
-    if (!error && data) {
-      setProjects(data as Project[]);
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .order('id', { ascending: true });
+      
+      if (!error && data) {
+        setProjects(data as Project[]);
+      }
+    } catch (err) {
+      console.error("Database connection failed:", err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  // 2. Real-time Database Sync and LocalStorage Fallback Hooks
+  // 2. Initialize and load persistent memory states
   useEffect(() => {
-    // A. Run initial fetch from your Supabase table
     fetchProjects();
 
-    // B. Create the WebSocket pipeline to broadcast changes across all devices
+    // Open a real-time connection stream to Supabase
     const channel = supabase
       .channel('portfolio-updates')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'projects' },
         () => {
-          fetchProjects(); // Triggers re-fetch across all viewing devices automatically
+          fetchProjects();
         }
       )
       .subscribe();
 
-    // C. Keep your other local storage initializers intact
     const savedProfile = localStorage.getItem('pb_profile');
     if (savedProfile) setProfile(JSON.parse(savedProfile));
 
@@ -126,7 +129,7 @@ export default function App() {
   };
 
   // State mutation actions
-  // Projects mutations (Updated to write back changes directly to Supabase!)
+  // Projects mutations (Synced directly to remote database)
   const handleUpdateProjectPublic = async (id: string, isPublic: boolean) => {
     const { error } = await supabase
       .from('projects')
@@ -140,38 +143,23 @@ export default function App() {
       ...p,
       dateAdded: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
     };
-
-    const { error } = await supabase
-      .from('projects')
-      .insert([newProject]);
-
+    const { error } = await supabase.from('projects').insert([newProject]);
     if (error) console.error("Error inserting project:", error);
   };
 
   const handleUpdateProject = async (p: Project) => {
-    const { error } = await supabase
-      .from('projects')
-      .update(p)
-      .eq('id', p.id);
-      
+    const { error } = await supabase.from('projects').update(p).eq('id', p.id);
     if (error) console.error("Error updating project:", error);
   };
 
   const handleDeleteProject = async (id: string) => {
-    const { error } = await supabase
-      .from('projects')
-      .delete()
-      .eq('id', id);
-
+    const { error } = await supabase.from('projects').delete().eq('id', id);
     if (error) console.error("Error deleting project:", error);
   };
 
   // Skills mutations
   const handleAddSkill = (s: Omit<Skill, 'id'>) => {
-    const newSkill: Skill = {
-      ...s,
-      id: `sk_${Date.now()}`,
-    };
+    const newSkill: Skill = { ...s, id: `sk_${Date.now()}` };
     syncSkills([newSkill, ...skills]);
   };
 
@@ -187,10 +175,7 @@ export default function App() {
 
   // Services mutations
   const handleAddService = (s: Omit<Service, 'id'>) => {
-    const newService: Service = {
-      ...s,
-      id: `ser_${Date.now()}`,
-    };
+    const newService: Service = { ...s, id: `ser_${Date.now()}` };
     syncServices([...services, newService]);
   };
 
@@ -216,10 +201,7 @@ export default function App() {
   };
 
   const handleAddTestimonial = (t: Omit<Testimonial, 'id'>) => {
-    const newTest: Testimonial = {
-      ...t,
-      id: `test_${Date.now()}`,
-    };
+    const newTest: Testimonial = { ...t, id: `test_${Date.now()}` };
     syncTestimonials([newTest, ...testimonials]);
   };
 
@@ -257,7 +239,6 @@ export default function App() {
 
   const unreadMessagesCount = messages.filter(m => m.isNew).length;
 
-  // Render basic loader shell while initial table elements resolve
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center text-white/50 font-mono text-xs">
@@ -356,7 +337,7 @@ export default function App() {
                     {unreadMessagesCount > 0 && (
                       <span className="bg-primary/15 text-primary text-[9px] font-bold font-mono px-2 py-0.5 rounded-full">
                         {unreadMessagesCount}
-                    </span>
+                      </span>
                     )}
                   </button>
 
