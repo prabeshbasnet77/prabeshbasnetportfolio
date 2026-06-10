@@ -184,14 +184,14 @@ export const LivePortfolio: React.FC<LivePortfolioProps> = ({
 
           {/* Right Header Controls */}
           <div className="flex items-center gap-3">
-            <button
+            {/* <button
               id="header-admin-cta"
               onClick={onNavigateToAdmin}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-white/[0.05] hover:bg-white/[0.1] text-accent border border-white/[0.08] transition-all"
             >
               <span className="material-symbols-outlined text-sm leading-none">dashboard</span>
               <span>Admin Center</span>
-            </button>
+            </button> */}
             <button
               id="header-hire-cta"
               onClick={() => scrollToSection('contact')}
@@ -940,7 +940,7 @@ export const LivePortfolio: React.FC<LivePortfolioProps> = ({
       <footer className="border-t border-white/[0.06] bg-black/40 backdrop-blur-md py-8 text-center px-4 sm:px-8">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-[10px] text-on-surface-variant">
           <span>&copy; {new Date().getFullYear()} {profile.fullName}. All rights reserved.</span>
-          <span>Crafted with pure structural aesthetics.</span>
+          {/* <span>Crafted with pure structural aesthetics.</span> */}
         </div>
       </footer>
 
