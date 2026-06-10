@@ -24,7 +24,7 @@ export const INITIAL_PROJECTS: Project[] = [
     title: "ESN Boarding School Website",
     category: "Web Design",
     description: "A modern and intuitive landing page design for an educational institution. The UI features a clean layout, accessible navigation, and a dynamic hero section that highlights key campus imagery alongside clear calls-to-action for admissions and notices. Key institutional metrics are prominently displayed to build credibility and engagement at a glance.",
-    imageUrl: "https://cdn.discordapp.com/attachments/1225791669891371018/1513940349779706047/Screenshot_2026-06-09_220001.png?ex=6a298e53&is=6a283cd3&hm=479dd2fdcc8e165cf67ec50c43f9ac91755337b1bc78e8df591e900820989844&",
+    imageUrl: "https://media.discordapp.net/attachments/1225791669891371018/1513940349779706047/Screenshot_2026-06-09_220001.png?ex=6a2adfd3&is=6a298e53&hm=3f508458aebf749af55f4e425e0c821bda8a9d4067d4a1928a41f7c13dee353d&=&format=webp&quality=lossless&width=1410&height=800",
     liveLink: "https://boarding-school-project.vercel.app/",
     isPublic: true,
     dateAdded: "Oct 12, 2023"
