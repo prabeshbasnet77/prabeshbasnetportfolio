@@ -10,7 +10,7 @@ import { AdminTestimonials } from './components/AdminTestimonials';
 import { AdminContact } from './components/AdminContact';
 import { AdminSettings } from './components/AdminSettings';
 import { AdminLogin } from './components/AdminLogin';
-import { supabase } from './supabaseClient.js';
+import { supabase } from './supabaseClient'; // Clean single-dot import inside the src folder
 
 import {
   INITIAL_PROFILE,
@@ -23,24 +23,22 @@ import {
 } from './initialData';
 
 export default function App() {
-  // Global switcher
+  // Global View Layout Switches
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminTab, setAdminTab] = useState('dashboard');
   const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem('pb_admin_logged_in') === 'true');
 
-  // Application unified states
+  // Unified Application Reactive States
   const [profile, setProfile] = useState<Profile>(INITIAL_PROFILE);
   const [socials, setSocials] = useState<SocialLinks>(INITIAL_SOCIALS);
   const [skills, setSkills] = useState<Skill[]>(INITIAL_SKILLS);
   const [services, setServices] = useState<Service[]>(INITIAL_SERVICES);
   const [testimonials, setTestimonials] = useState<Testimonial[]>(INITIAL_TESTIMONIALS);
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
-
-  // Dynamic Database Real-time states for projects
   const [projects, setProjects] = useState<Project[]>(INITIAL_PROJECTS);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // 1. Fetch Projects from Supabase
+  // Safe Remote Database Operations Fetcher
   const fetchProjects = async () => {
     try {
       const { data, error } = await supabase
@@ -48,29 +46,35 @@ export default function App() {
         .select('*')
         .order('id', { ascending: true });
       
-      if (!error && data) {
+      if (!error && data && data.length > 0) {
         setProjects(data as Project[]);
+      } else {
+        // Fallback to local static assets if database records are empty or missing
+        const savedProjects = localStorage.getItem('pb_projects');
+        if (savedProjects) {
+          setProjects(JSON.parse(savedProjects));
+        } else {
+          setProjects(INITIAL_PROJECTS);
+        }
       }
     } catch (err) {
-      console.error("Database connection failed:", err);
+      console.warn("Could not connect to database table, using fallback storage data:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  // 2. Initialize and load persistent memory states
+  // Synchronize Application and Runtime Lifecycles
   useEffect(() => {
     fetchProjects();
 
-    // Open a real-time connection stream to Supabase
+    // Setup active real-time updates data stream channel mapping
     const channel = supabase
       .channel('portfolio-updates')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'projects' },
-        () => {
-          fetchProjects();
-        }
+        () => { fetchProjects(); }
       )
       .subscribe();
 
@@ -97,7 +101,7 @@ export default function App() {
     };
   }, []);
 
-  // Sync state helpers to localStorage on mutations
+  // System Local Cache Persistent Synchronization Synchronizers
   const syncProfile = (p: Profile) => {
     setProfile(p);
     localStorage.setItem('pb_profile', JSON.stringify(p));
@@ -106,6 +110,11 @@ export default function App() {
   const syncSocials = (s: SocialLinks) => {
     setSocials(s);
     localStorage.setItem('pb_socials', JSON.stringify(s));
+  };
+
+  const syncProjects = (ps: Project[]) => {
+    setProjects(ps);
+    localStorage.setItem('pb_projects', JSON.stringify(ps));
   };
 
   const syncSkills = (sk: Skill[]) => {
@@ -128,36 +137,35 @@ export default function App() {
     localStorage.setItem('pb_messages', JSON.stringify(ms));
   };
 
-  // State mutation actions
-  // Projects mutations (Synced directly to remote database)
+  // Data Mutation Action Dispatches
   const handleUpdateProjectPublic = async (id: string, isPublic: boolean) => {
-    const { error } = await supabase
-      .from('projects')
-      .update({ isPublic })
-      .eq('id', id);
-    if (error) console.error("Error updating visibility:", error);
+    const updated = projects.map(p => p.id === id ? { ...p, isPublic } : p);
+    syncProjects(updated);
+    await supabase.from('projects').update({ isPublic }).eq('id', id);
   };
 
   const handleAddProject = async (p: Omit<Project, 'id' | 'dateAdded'>) => {
-    const newProject = {
+    const newProject: Project = {
       ...p,
+      id: `proj_${Date.now()}`,
       dateAdded: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
     };
-    const { error } = await supabase.from('projects').insert([newProject]);
-    if (error) console.error("Error inserting project:", error);
+    syncProjects([newProject, ...projects]);
+    await supabase.from('projects').insert([newProject]);
   };
 
   const handleUpdateProject = async (p: Project) => {
-    const { error } = await supabase.from('projects').update(p).eq('id', p.id);
-    if (error) console.error("Error updating project:", error);
+    const updated = projects.map(item => item.id === p.id ? p : item);
+    syncProjects(updated);
+    await supabase.from('projects').update(p).eq('id', p.id);
   };
 
   const handleDeleteProject = async (id: string) => {
-    const { error } = await supabase.from('projects').delete().eq('id', id);
-    if (error) console.error("Error deleting project:", error);
+    const updated = projects.filter(p => p.id !== id);
+    syncProjects(updated);
+    await supabase.from('projects').delete().eq('id', id);
   };
 
-  // Skills mutations
   const handleAddSkill = (s: Omit<Skill, 'id'>) => {
     const newSkill: Skill = { ...s, id: `sk_${Date.now()}` };
     syncSkills([newSkill, ...skills]);
@@ -173,7 +181,6 @@ export default function App() {
     syncSkills(list);
   };
 
-  // Services mutations
   const handleAddService = (s: Omit<Service, 'id'>) => {
     const newService: Service = { ...s, id: `ser_${Date.now()}` };
     syncServices([...services, newService]);
@@ -189,7 +196,6 @@ export default function App() {
     syncServices(list);
   };
 
-  // Testimonials mutations
   const handleUpdateTestimonialStatus = (id: string, status: Testimonial['status']) => {
     const list = testimonials.map(t => t.id === id ? { ...t, status } : t);
     syncTestimonials(list);
@@ -205,7 +211,6 @@ export default function App() {
     syncTestimonials([newTest, ...testimonials]);
   };
 
-  // Inbox & Messages mutations
   const handleMarkMessageRead = (id: string) => {
     const list = messages.map(m => m.id === id ? { ...m, isNew: false } : m);
     syncMessages(list);
@@ -221,7 +226,7 @@ export default function App() {
     syncMessages(list);
   };
 
-  const handleContactSubmit = (name: string, email: string, subject: string, message: string) => {
+  const handleContactSubmit = async (name: string, email: string, subject: string, message: string) => {
     const initial = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) || 'CL';
     const newInquiry: Message = {
       id: `msg_${Date.now()}`,
@@ -235,6 +240,14 @@ export default function App() {
       avatarSeed: initial,
     };
     syncMessages([newInquiry, ...messages]);
+
+    // Forward form data submission smoothly straight to your backend custom schema structures
+    await supabase.from('Backend').insert([{
+      FULL_NAME: name,
+      EMAIL_ADDRESS: email,
+      SUBJECT_MATTER: subject,
+      MESSAGE_BODY: message
+    }]);
   };
 
   const unreadMessagesCount = messages.filter(m => m.isNew).length;
@@ -242,7 +255,7 @@ export default function App() {
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center text-white/50 font-mono text-xs">
-        Connecting to Database Engine...
+        Initializing Portfolio Core Engine Modules...
       </div>
     );
   }
